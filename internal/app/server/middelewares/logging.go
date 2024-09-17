@@ -85,8 +85,8 @@ func (l *Logging) LoggingMiddleware(next http.Handler) http.Handler {
 				fields = append(fields, zap.String("Body", base64.StdEncoding.EncodeToString(body)))
 			}
 
-			if clientId := r.Header.Get("x-client-id"); clientId != "" {
-				fields = append(fields, zap.String("client_id", clientId))
+			if clientID := r.Header.Get("x-client-id"); clientID != "" {
+				fields = append(fields, zap.String("client_id", clientID))
 			}
 
 			l.log.Log(lvl, r.Method, fields...)

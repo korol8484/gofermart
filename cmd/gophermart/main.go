@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"github.com/caarlos0/env/v11"
-	"github.com/korol8484/gofermart/internal/app/api/user_auth"
+	"github.com/korol8484/gofermart/internal/app/api/user"
 	"github.com/korol8484/gofermart/internal/app/cli/migrate"
 	"github.com/korol8484/gofermart/internal/app/config"
 	"github.com/korol8484/gofermart/internal/app/db"
@@ -78,9 +78,9 @@ func run(cfg *config.App, log *zap.Logger) error {
 
 	// Секрету тут не место, или через env или хранить как файл, тут упрощаем
 	session := token.NewJwtService("secret", "Authorization", time.Hour*2)
-	userRepo := repository.NewDbStore(pg)
+	userRepo := repository.NewDBStore(pg)
 	authSvc := auth.NewService(userRepo)
-	authHandler := user_auth.NewAuthHandler(authSvc, session)
+	authHandler := user.NewAuthHandler(authSvc, session)
 
 	httpServer := server.NewApp(&server.Config{
 		Listen:         cfg.Listen,

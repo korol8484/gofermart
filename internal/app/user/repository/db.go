@@ -8,15 +8,15 @@ import (
 	"github.com/korol8484/gofermart/internal/app/domain"
 )
 
-type DbStore struct {
+type DBStore struct {
 	db *sql.DB
 }
 
-func NewDbStore(db *sql.DB) *DbStore {
-	return &DbStore{db: db}
+func NewDBStore(db *sql.DB) *DBStore {
+	return &DBStore{db: db}
 }
 
-func (d *DbStore) AddUser(ctx context.Context, user *domain.User) (*domain.User, error) {
+func (d *DBStore) AddUser(ctx context.Context, user *domain.User) (*domain.User, error) {
 	var id domain.UserId
 
 	err := d.db.QueryRowContext(
@@ -40,7 +40,7 @@ func (d *DbStore) AddUser(ctx context.Context, user *domain.User) (*domain.User,
 	return user, nil
 }
 
-func (d *DbStore) FindByLogin(ctx context.Context, login string) (*domain.User, error) {
+func (d *DBStore) FindByLogin(ctx context.Context, login string) (*domain.User, error) {
 	u := &domain.User{}
 
 	err := d.db.QueryRowContext(ctx, `SELECT u.id, u.login, u.password_hash FROM "user" u WHERE u.login = $1;`, login).Scan(

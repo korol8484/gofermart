@@ -30,7 +30,7 @@ func NewJwtService(secret, tokenName string, expire time.Duration) *Service {
 	}
 }
 
-func (s *Service) LoadUserId(r *http.Request) (domain.UserId, error) {
+func (s *Service) LoadUserID(r *http.Request) (domain.UserId, error) {
 	cToken, err := r.Cookie(s.tokenName)
 	if err != nil {
 		return 0, errors.New("user session not' start")
