@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"github.com/caarlos0/env/v11"
+	"github.com/korol8484/gofermart/internal/app/api/order"
 	"github.com/korol8484/gofermart/internal/app/api/user"
 	"github.com/korol8484/gofermart/internal/app/cli/migrate"
 	"github.com/korol8484/gofermart/internal/app/config"
@@ -82,6 +83,8 @@ func run(cfg *config.App, log *zap.Logger) error {
 	authSvc := auth.NewService(userRepo)
 	authHandler := user.NewAuthHandler(authSvc, session)
 
+	oHandler := order.Handler{}
+
 	httpServer := server.NewApp(&server.Config{
 		Listen:         cfg.Listen,
 		ReadTimeout:    10 * time.Second,
@@ -90,6 +93,7 @@ func run(cfg *config.App, log *zap.Logger) error {
 	}, log)
 
 	httpServer.AddHandler(authHandler.RegisterRoutes())
+	httpServer.AddHandler(oHandler.RegisterRoutes(session))
 
 	errCh := make(chan error, 1)
 	oss, stop := make(chan os.Signal, 1), make(chan struct{}, 1)
