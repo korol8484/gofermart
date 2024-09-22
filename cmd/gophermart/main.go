@@ -3,12 +3,15 @@ package main
 import (
 	"flag"
 	"github.com/caarlos0/env/v11"
+	hBalance "github.com/korol8484/gofermart/internal/app/api/balance"
 	"github.com/korol8484/gofermart/internal/app/api/order"
 	"github.com/korol8484/gofermart/internal/app/api/user"
+	"github.com/korol8484/gofermart/internal/app/balance"
 	"github.com/korol8484/gofermart/internal/app/cli/migrate"
 	"github.com/korol8484/gofermart/internal/app/config"
 	"github.com/korol8484/gofermart/internal/app/db"
 	"github.com/korol8484/gofermart/internal/app/logger"
+	dorder "github.com/korol8484/gofermart/internal/app/order"
 	"github.com/korol8484/gofermart/internal/app/server"
 	"github.com/korol8484/gofermart/internal/app/token"
 	"github.com/korol8484/gofermart/internal/app/user/auth"
@@ -83,7 +86,17 @@ func run(cfg *config.App, log *zap.Logger) error {
 	authSvc := auth.NewService(userRepo)
 	authHandler := user.NewAuthHandler(authSvc, session)
 
-	oHandler := order.Handler{}
+	// Orders
+	nv := dorder.NewNumberValidate()
+
+	orderRep := dorder.NewOrderRepository(pg)
+	orderSvc := dorder.NewOrderService(orderRep, dorder.NewValidator(orderRep, nv))
+	oHandler := order.NewOrderHandler(orderSvc)
+
+	// balance
+	balanceRep := balance.NewBalanceRepository(pg)
+	balanceSvc := balance.NewBalanceService(balanceRep, nv)
+	bHandler := hBalance.NewBalanceHandler(balanceSvc)
 
 	httpServer := server.NewApp(&server.Config{
 		Listen:         cfg.Listen,
@@ -94,6 +107,7 @@ func run(cfg *config.App, log *zap.Logger) error {
 
 	httpServer.AddHandler(authHandler.RegisterRoutes())
 	httpServer.AddHandler(oHandler.RegisterRoutes(session))
+	httpServer.AddHandler(bHandler.RegisterRoutes(session))
 
 	errCh := make(chan error, 1)
 	oss, stop := make(chan os.Signal, 1), make(chan struct{}, 1)

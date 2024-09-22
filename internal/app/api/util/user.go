@@ -23,6 +23,8 @@ func CheckAuth(loader AuthSession) func(h http.Handler) http.Handler {
 
 			ctx := r.Context()
 			ctx = context.WithValue(ctx, ctxUserKey, userId)
+
+			h.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }

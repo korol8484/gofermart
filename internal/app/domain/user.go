@@ -2,6 +2,10 @@ package domain
 
 import "errors"
 
+var (
+	ErrIssetUser = errors.New("логин уже занят")
+)
+
 type UserId int64
 
 type User struct {
@@ -9,8 +13,3 @@ type User struct {
 	Login        string
 	PasswordHash string
 }
-
-var (
-	ErrIssetUser = errors.New("логин уже занят")
-	ErrNotFound  = errors.New("user not found")
-)
