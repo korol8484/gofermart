@@ -34,15 +34,10 @@ func NewApp(
 }
 
 func (a *App) Run(debug bool) error {
-	var logBody uint8
-	if debug {
-		logBody = 1
-	}
-
 	router := chi.NewRouter()
 	router.Use(
 		middleware.Recoverer,
-		middlewares.NewLogging(a.log, logBody).LoggingMiddleware,
+		middlewares.NewLogging(a.log, 2).LoggingMiddleware,
 	)
 
 	for _, m := range a.middlewares {
