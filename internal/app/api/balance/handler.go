@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/korol8484/gofermart/internal/app/api/util"
 	"github.com/korol8484/gofermart/internal/app/domain"
+	"go.uber.org/zap"
 	"io"
 	"net/http"
 	"time"
@@ -35,11 +36,12 @@ type usecase interface {
 }
 
 type Handler struct {
-	uc usecase
+	uc  usecase
+	log *zap.Logger
 }
 
-func NewBalanceHandler(uc usecase) *Handler {
-	return &Handler{uc: uc}
+func NewBalanceHandler(uc usecase, log *zap.Logger) *Handler {
+	return &Handler{uc: uc, log: log}
 }
 
 func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
@@ -104,6 +106,11 @@ func (h *Handler) balance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.log.Info(
+		"user balance",
+		zap.String("response", string(b)),
+	)
+
 	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(b)
@@ -129,7 +136,7 @@ func (h *Handler) withdraw(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = h.uc.Withdraw(r.Context(), userID, req.Order, req.Sum)
+	b, err := h.uc.Withdraw(r.Context(), userID, req.Order, req.Sum)
 	if err != nil {
 		if errors.Is(err, domain.ErrorNumberValidateFormat) {
 			w.WriteHeader(http.StatusUnprocessableEntity)
@@ -142,6 +149,12 @@ func (h *Handler) withdraw(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	h.log.Info(
+		"balance withdraw",
+		zap.Float64("sum", b.Sum),
+		zap.Int("type", int(b.Type)),
+	)
 
 	w.WriteHeader(http.StatusOK)
 }
