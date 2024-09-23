@@ -29,9 +29,9 @@ type withdrawRequest struct {
 }
 
 type usecase interface {
-	UserWithdrawals(ctx context.Context, userId domain.UserID) ([]*domain.Balance, error)
-	GetUserSumWC(ctx context.Context, userId domain.UserID) (*domain.SumWC, error)
-	Withdraw(ctx context.Context, userId domain.UserID, number string, sum float64) (*domain.Balance, error)
+	UserWithdrawals(ctx context.Context, userID domain.UserID) ([]*domain.Balance, error)
+	GetUserSumWC(ctx context.Context, userID domain.UserID) (*domain.SumWC, error)
+	Withdraw(ctx context.Context, userID domain.UserID, number string, sum float64) (*domain.Balance, error)
 }
 
 type Handler struct {
@@ -43,13 +43,13 @@ func NewBalanceHandler(uc usecase) *Handler {
 }
 
 func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
-	userId, ok := util.UserIdFromContext(r.Context())
+	userID, ok := util.UserIdFromContext(r.Context())
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
-	withdrawals, err := h.uc.UserWithdrawals(r.Context(), userId)
+	withdrawals, err := h.uc.UserWithdrawals(r.Context(), userID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -81,13 +81,13 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) balance(w http.ResponseWriter, r *http.Request) {
-	userId, ok := util.UserIdFromContext(r.Context())
+	userID, ok := util.UserIdFromContext(r.Context())
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
-	sumWC, err := h.uc.GetUserSumWC(r.Context(), userId)
+	sumWC, err := h.uc.GetUserSumWC(r.Context(), userID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -110,7 +110,7 @@ func (h *Handler) balance(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) withdraw(w http.ResponseWriter, r *http.Request) {
-	userId, ok := util.UserIdFromContext(r.Context())
+	userID, ok := util.UserIdFromContext(r.Context())
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
@@ -129,7 +129,7 @@ func (h *Handler) withdraw(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = h.uc.Withdraw(r.Context(), userId, req.Order, req.Sum)
+	_, err = h.uc.Withdraw(r.Context(), userID, req.Order, req.Sum)
 	if err != nil {
 		if errors.Is(err, domain.ErrorNumberValidateFormat) {
 			w.WriteHeader(http.StatusUnprocessableEntity)

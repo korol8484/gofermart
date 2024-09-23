@@ -19,11 +19,11 @@ func NewBalanceRepository(db *sql.DB) *Repository {
 	return &Repository{db: db}
 }
 
-func (r *Repository) GetUserWithdrawals(ctx context.Context, userId domain.UserID) ([]*domain.Balance, error) {
+func (r *Repository) GetUserWithdrawals(ctx context.Context, userID domain.UserID) ([]*domain.Balance, error) {
 	rows, err := r.db.QueryContext(
 		ctx,
 		`SELECT * FROM balance b WHERE b.user_id = $1 AND b.type = $2 ORDER BY b.created_at DESC;`,
-		userId,
+		userID,
 		domain.BalanceTypeWithdrawn,
 	)
 
@@ -48,7 +48,7 @@ func (r *Repository) GetUserWithdrawals(ctx context.Context, userId domain.UserI
 	return win, nil
 }
 
-func (r *Repository) Withdraw(ctx context.Context, userId domain.UserID, number string, sum float64) (*domain.Balance, error) {
+func (r *Repository) Withdraw(ctx context.Context, userID domain.UserID, number string, sum float64) (*domain.Balance, error) {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, err
@@ -60,7 +60,7 @@ func (r *Repository) Withdraw(ctx context.Context, userId domain.UserID, number 
 		}
 	}()
 
-	_, err = tx.ExecContext(ctx, `UPDATE user_balance SET balance=balance-$1 WHERE user_id = $2;`, sum, userId)
+	_, err = tx.ExecContext(ctx, `UPDATE user_balance SET balance=balance-$1 WHERE user_id = $2;`, sum, userID)
 	if err != nil {
 		var e *pgconn.PgError
 		if errors.As(err, &e) {
@@ -78,7 +78,7 @@ func (r *Repository) Withdraw(ctx context.Context, userId domain.UserID, number 
 	err = tx.QueryRowContext(
 		ctx,
 		`INSERT INTO balance (order_number, sum, type, user_id, created_at) VALUES ($1, $2, $3, $4, $5) RETURNING id;`,
-		number, sum, domain.BalanceTypeWithdrawn, userId, createdAt,
+		number, sum, domain.BalanceTypeWithdrawn, userID, createdAt,
 	).Scan(&id)
 	if err != nil {
 		return nil, err
@@ -91,7 +91,7 @@ func (r *Repository) Withdraw(ctx context.Context, userId domain.UserID, number 
 	return &domain.Balance{
 		ID:          id,
 		OrderNumber: number,
-		UserID:      userId,
+		UserID:      userID,
 		Sum:         sum,
 		Type:        domain.BalanceTypeWithdrawn,
 		CreatedAt:   createdAt,
@@ -110,13 +110,13 @@ func (r *Repository) AddBalance(o *domain.Balance) error {
 	return nil
 }
 
-func (r *Repository) GetUserSum(ctx context.Context, userId domain.UserID, types ...domain.BalanceType) ([]*domain.SumBalance, error) {
+func (r *Repository) GetUserSum(ctx context.Context, userID domain.UserID, types ...domain.BalanceType) ([]*domain.SumBalance, error) {
 	var (
 		placeholders []string
 		vals         []interface{}
 	)
 
-	vals = append(vals, userId)
+	vals = append(vals, userID)
 	for i, v := range types {
 		placeholders = append(placeholders, fmt.Sprintf("$%d",
 			i+2,

@@ -21,8 +21,8 @@ type listResponse struct {
 }
 
 type orderRep interface {
-	CreateOrder(ctx context.Context, number string, userId domain.UserID) (*domain.Order, error)
-	UserOrders(ctx context.Context, userId domain.UserID) ([]domain.OrderWithBalance, error)
+	CreateOrder(ctx context.Context, number string, userID domain.UserID) (*domain.Order, error)
+	UserOrders(ctx context.Context, userID domain.UserID) ([]domain.OrderWithBalance, error)
 }
 
 type Handler struct {
@@ -34,7 +34,7 @@ func NewOrderHandler(rep orderRep) *Handler {
 }
 
 func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
-	userId, ok := util.UserIdFromContext(r.Context())
+	userID, ok := util.UserIdFromContext(r.Context())
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
@@ -46,7 +46,7 @@ func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = h.rep.CreateOrder(r.Context(), string(body), userId)
+	_, err = h.rep.CreateOrder(r.Context(), string(body), userID)
 	if err != nil {
 		if errors.Is(err, order.ErrorIssetOrder) {
 			w.WriteHeader(http.StatusOK)
@@ -67,13 +67,13 @@ func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) listOrders(w http.ResponseWriter, r *http.Request) {
-	userId, ok := util.UserIdFromContext(r.Context())
+	userID, ok := util.UserIdFromContext(r.Context())
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
-	orders, err := h.rep.UserOrders(r.Context(), userId)
+	orders, err := h.rep.UserOrders(r.Context(), userID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return

@@ -47,15 +47,19 @@ func (r *Repository) CreateOrder(ctx context.Context, order *domain.Order) (int6
 	return id, nil
 }
 
-func (r *Repository) LoadOrdersWithBalance(ctx context.Context, userId domain.UserID) ([]domain.OrderWithBalance, error) {
+func (r *Repository) LoadOrdersWithBalance(ctx context.Context, userID domain.UserID) ([]domain.OrderWithBalance, error) {
 	rows, err := r.db.QueryContext(
 		ctx,
 		`SELECT o.id, o.number, o.status, o.user_id, o.created_at, b.sum FROM orders o LEFT JOIN balance b on o.number = b.order_number AND b.type = $1 WHERE o.user_id = $2 ORDER BY o.created_at DESC;`,
 		domain.BalanceTypeAdd,
-		userId,
+		userID,
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	if rows.Err() != nil {
+		return nil, rows.Err()
 	}
 
 	defer rows.Close()
@@ -94,6 +98,10 @@ func (r *Repository) LoadOrdersToProcess(ctx context.Context) ([]domain.Order, e
 	rows, err := r.db.QueryContext(ctx, q, domain.StatusProcessing, domain.StatusNew)
 	if err != nil {
 		return nil, err
+	}
+
+	if rows.Err() != nil {
+		return nil, rows.Err()
 	}
 
 	defer rows.Close()

@@ -19,7 +19,7 @@ var (
 )
 
 type validateOrder interface {
-	Validate(ctx context.Context, number string, userId domain.UserID) ValidateError
+	Validate(ctx context.Context, number string, userID domain.UserID) ValidateError
 }
 
 type AccrualResponse struct {
@@ -38,7 +38,7 @@ type BalanceRepository interface {
 
 type ordersRepository interface {
 	CreateOrder(ctx context.Context, order *domain.Order) (int64, error)
-	LoadOrdersWithBalance(ctx context.Context, userId domain.UserID) ([]domain.OrderWithBalance, error)
+	LoadOrdersWithBalance(ctx context.Context, userID domain.UserID) ([]domain.OrderWithBalance, error)
 	LoadOrdersToProcess(ctx context.Context) ([]domain.Order, error)
 	Update(o domain.Order) error
 }
@@ -75,8 +75,8 @@ func NewOrderService(
 	return s
 }
 
-func (s *Service) CreateOrder(ctx context.Context, number string, userId domain.UserID) (*domain.Order, error) {
-	err := s.validator.Validate(ctx, number, userId)
+func (s *Service) CreateOrder(ctx context.Context, number string, userID domain.UserID) (*domain.Order, error) {
+	err := s.validator.Validate(ctx, number, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +84,7 @@ func (s *Service) CreateOrder(ctx context.Context, number string, userId domain.
 	order := &domain.Order{
 		Number:    number,
 		Status:    domain.StatusNew,
-		UserID:    userId,
+		UserID:    userID,
 		CreatedAt: time.Now(),
 	}
 
@@ -98,8 +98,8 @@ func (s *Service) CreateOrder(ctx context.Context, number string, userId domain.
 	return order, nil
 }
 
-func (s *Service) UserOrders(ctx context.Context, userId domain.UserID) ([]domain.OrderWithBalance, error) {
-	orders, err := s.rep.LoadOrdersWithBalance(ctx, userId)
+func (s *Service) UserOrders(ctx context.Context, userID domain.UserID) ([]domain.OrderWithBalance, error) {
+	orders, err := s.rep.LoadOrdersWithBalance(ctx, userID)
 	if err != nil {
 		return nil, err
 	}

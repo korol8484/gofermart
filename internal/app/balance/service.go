@@ -6,9 +6,9 @@ import (
 )
 
 type repository interface {
-	GetUserWithdrawals(ctx context.Context, userId domain.UserID) ([]*domain.Balance, error)
-	GetUserSum(ctx context.Context, userId domain.UserID, types ...domain.BalanceType) ([]*domain.SumBalance, error)
-	Withdraw(ctx context.Context, userId domain.UserID, number string, sum float64) (*domain.Balance, error)
+	GetUserWithdrawals(ctx context.Context, userID domain.UserID) ([]*domain.Balance, error)
+	GetUserSum(ctx context.Context, userID domain.UserID, types ...domain.BalanceType) ([]*domain.SumBalance, error)
+	Withdraw(ctx context.Context, userID domain.UserID, number string, sum float64) (*domain.Balance, error)
 }
 
 type Service struct {
@@ -23,8 +23,8 @@ func NewBalanceService(rep repository, nv domain.OrderNumberValidate) *Service {
 	}
 }
 
-func (s *Service) UserWithdrawals(ctx context.Context, userId domain.UserID) ([]*domain.Balance, error) {
-	withdrawals, err := s.rep.GetUserWithdrawals(ctx, userId)
+func (s *Service) UserWithdrawals(ctx context.Context, userID domain.UserID) ([]*domain.Balance, error) {
+	withdrawals, err := s.rep.GetUserWithdrawals(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -32,8 +32,8 @@ func (s *Service) UserWithdrawals(ctx context.Context, userId domain.UserID) ([]
 	return withdrawals, nil
 }
 
-func (s *Service) GetUserSumWC(ctx context.Context, userId domain.UserID) (*domain.SumWC, error) {
-	sums, err := s.rep.GetUserSum(ctx, userId, domain.BalanceTypeAdd, domain.BalanceTypeWithdrawn)
+func (s *Service) GetUserSumWC(ctx context.Context, userID domain.UserID) (*domain.SumWC, error) {
+	sums, err := s.rep.GetUserSum(ctx, userID, domain.BalanceTypeAdd, domain.BalanceTypeWithdrawn)
 	if err != nil {
 		return nil, err
 	}
@@ -51,10 +51,10 @@ func (s *Service) GetUserSumWC(ctx context.Context, userId domain.UserID) (*doma
 	return sumWC, nil
 }
 
-func (s *Service) Withdraw(ctx context.Context, userId domain.UserID, number string, sum float64) (*domain.Balance, error) {
+func (s *Service) Withdraw(ctx context.Context, userID domain.UserID, number string, sum float64) (*domain.Balance, error) {
 	if err := s.nv.Validate(number); err != nil {
 		return nil, err
 	}
 
-	return s.rep.Withdraw(ctx, userId, number, sum)
+	return s.rep.Withdraw(ctx, userID, number, sum)
 }
