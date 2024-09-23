@@ -92,7 +92,7 @@ func run(cfg *config.App, log *zap.Logger) error {
 	// balance
 	balanceRep := balance.NewBalanceRepository(pg)
 	balanceSvc := balance.NewBalanceService(balanceRep, nv)
-	bHandler := hBalance.NewBalanceHandler(balanceSvc)
+	bHandler := hBalance.NewBalanceHandler(balanceSvc, log)
 
 	// Orders
 
