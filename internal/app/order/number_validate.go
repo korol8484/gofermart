@@ -12,6 +12,10 @@ func NewNumberValidate() *NumberValidate {
 }
 
 func (n *NumberValidate) Validate(number string) domain.NumberValidateError {
+	if len(number) < 1 {
+		return domain.ErrorNumberValidateFormat
+	}
+
 	if err := n.validateLun(number); err != nil {
 		return domain.ErrorNumberValidateFormat
 	}

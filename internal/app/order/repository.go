@@ -19,7 +19,7 @@ func (r *Repository) LoadOrder(ctx context.Context, number string) (*domain.Orde
 	o := &domain.Order{}
 	err := r.db.QueryRowContext(
 		ctx,
-		`SELECT * FROM orders o WHERE o.number = $1;`,
+		`SELECT o.id, o.number, o.status, o.user_id, o.created_at FROM orders o WHERE o.number = $1;`,
 		number,
 	).Scan(&o.Id, &o.Number, &o.Status, &o.UserId, &o.CreatedAt)
 	if err != nil {
@@ -50,7 +50,7 @@ func (r *Repository) CreateOrder(ctx context.Context, order *domain.Order) (int6
 func (r *Repository) LoadOrdersWithBalance(ctx context.Context, userId domain.UserId) ([]domain.OrderWithBalance, error) {
 	rows, err := r.db.QueryContext(
 		ctx,
-		`SELECT o.*, b.sum FROM orders o LEFT JOIN balance b on o.number = b.order_number AND b.type = $1 WHERE o.user_id = $2 ORDER BY o.created_at DESC;`,
+		`SELECT o.id, o.number, o.status, o.user_id, o.created_at, b.sum FROM orders o LEFT JOIN balance b on o.number = b.order_number AND b.type = $1 WHERE o.user_id = $2 ORDER BY o.created_at DESC;`,
 		domain.BalanceTypeAdd,
 		userId,
 	)

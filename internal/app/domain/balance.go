@@ -1,12 +1,19 @@
 package domain
 
-import "time"
+import (
+	"errors"
+	"time"
+)
 
 type BalanceType int
 
 const (
 	BalanceTypeAdd BalanceType = iota
 	BalanceTypeWithdrawn
+)
+
+var (
+	ErrBalanceInsufficientFunds = errors.New("на счету недостаточно средств")
 )
 
 type Balance struct {

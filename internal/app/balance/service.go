@@ -8,6 +8,7 @@ import (
 type repository interface {
 	GetUserWithdrawals(ctx context.Context, userId domain.UserId) ([]*domain.Balance, error)
 	GetUserSum(ctx context.Context, userId domain.UserId, types ...domain.BalanceType) ([]*domain.SumBalance, error)
+	Withdraw(ctx context.Context, userId domain.UserId, number string, sum float64) (*domain.Balance, error)
 }
 
 type Service struct {
@@ -48,4 +49,12 @@ func (s *Service) GetUserSumWC(ctx context.Context, userId domain.UserId) (*doma
 	}
 
 	return sumWC, nil
+}
+
+func (s *Service) Withdraw(ctx context.Context, userId domain.UserId, number string, sum float64) (*domain.Balance, error) {
+	if err := s.nv.Validate(number); err != nil {
+		return nil, err
+	}
+
+	return s.rep.Withdraw(ctx, userId, number, sum)
 }
