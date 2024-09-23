@@ -17,16 +17,16 @@ var (
 )
 
 type Balance struct {
-	Id          int64
+	ID          int64
 	OrderNumber string
-	UserId      UserId
+	UserID      UserID
 	Sum         float64
 	Type        BalanceType
 	CreatedAt   time.Time
 }
 
 type SumBalance struct {
-	UserId UserId
+	UserID UserID
 	Type   BalanceType
 	Sum    float64
 }

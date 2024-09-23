@@ -21,8 +21,8 @@ type listResponse struct {
 }
 
 type orderRep interface {
-	CreateOrder(ctx context.Context, number string, userId domain.UserId) (*domain.Order, error)
-	UserOrders(ctx context.Context, userId domain.UserId) ([]domain.OrderWithBalance, error)
+	CreateOrder(ctx context.Context, number string, userId domain.UserID) (*domain.Order, error)
+	UserOrders(ctx context.Context, userId domain.UserID) ([]domain.OrderWithBalance, error)
 }
 
 type Handler struct {

@@ -17,7 +17,7 @@ func NewDBStore(db *sql.DB) *DBStore {
 }
 
 func (d *DBStore) AddUser(ctx context.Context, user *domain.User) (*domain.User, error) {
-	var id domain.UserId
+	var id domain.UserID
 
 	err := d.db.QueryRowContext(
 		ctx,

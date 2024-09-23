@@ -13,7 +13,7 @@ type AuthUser interface {
 }
 
 type AuthSession interface {
-	CreateSession(w http.ResponseWriter, r *http.Request, id domain.UserId) error
+	CreateSession(w http.ResponseWriter, r *http.Request, id domain.UserID) error
 }
 
 // Handler -

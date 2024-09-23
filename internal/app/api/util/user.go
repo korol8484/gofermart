@@ -7,30 +7,32 @@ import (
 )
 
 type AuthSession interface {
-	LoadUserID(r *http.Request) (domain.UserId, error)
+	LoadUserID(r *http.Request) (domain.UserID, error)
 }
 
-var ctxUserKey = "ctx_user_id"
+type key string
+
+var ctxUserKey key = "ctx_user_id"
 
 func CheckAuth(loader AuthSession) func(h http.Handler) http.Handler {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			userId, err := loader.LoadUserID(r)
+			userID, err := loader.LoadUserID(r)
 			if err != nil {
 				http.Error(w, "", http.StatusUnauthorized)
 				return
 			}
 
 			ctx := r.Context()
-			ctx = context.WithValue(ctx, ctxUserKey, userId)
+			ctx = context.WithValue(ctx, ctxUserKey, userID)
 
 			h.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }
 
-func UserIdFromContext(ctx context.Context) (domain.UserId, bool) {
-	userId, ok := ctx.Value(ctxUserKey).(domain.UserId)
+func UserIdFromContext(ctx context.Context) (domain.UserID, bool) {
+	userID, ok := ctx.Value(ctxUserKey).(domain.UserID)
 
-	return userId, ok
+	return userID, ok
 }

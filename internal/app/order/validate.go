@@ -24,7 +24,7 @@ func NewValidator(rep repository, nv domain.OrderNumberValidate) *Validate {
 	return &Validate{rep: rep, nv: nv}
 }
 
-func (v *Validate) Validate(ctx context.Context, number string, userId domain.UserId) ValidateError {
+func (v *Validate) Validate(ctx context.Context, number string, userId domain.UserID) ValidateError {
 	if err := v.nv.Validate(number); err != nil {
 		return err
 	}
@@ -38,7 +38,7 @@ func (v *Validate) Validate(ctx context.Context, number string, userId domain.Us
 		return err
 	}
 
-	if order.UserId != userId {
+	if order.UserID != userId {
 		return ErrorIssetOrderNotOwner
 	}
 

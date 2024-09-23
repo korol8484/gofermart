@@ -19,7 +19,7 @@ var (
 )
 
 type validateOrder interface {
-	Validate(ctx context.Context, number string, userId domain.UserId) ValidateError
+	Validate(ctx context.Context, number string, userId domain.UserID) ValidateError
 }
 
 type AccrualResponse struct {
@@ -38,7 +38,7 @@ type BalanceRepository interface {
 
 type ordersRepository interface {
 	CreateOrder(ctx context.Context, order *domain.Order) (int64, error)
-	LoadOrdersWithBalance(ctx context.Context, userId domain.UserId) ([]domain.OrderWithBalance, error)
+	LoadOrdersWithBalance(ctx context.Context, userId domain.UserID) ([]domain.OrderWithBalance, error)
 	LoadOrdersToProcess(ctx context.Context) ([]domain.Order, error)
 	Update(o domain.Order) error
 }
@@ -75,7 +75,7 @@ func NewOrderService(
 	return s
 }
 
-func (s *Service) CreateOrder(ctx context.Context, number string, userId domain.UserId) (*domain.Order, error) {
+func (s *Service) CreateOrder(ctx context.Context, number string, userId domain.UserID) (*domain.Order, error) {
 	err := s.validator.Validate(ctx, number, userId)
 	if err != nil {
 		return nil, err
@@ -84,7 +84,7 @@ func (s *Service) CreateOrder(ctx context.Context, number string, userId domain.
 	order := &domain.Order{
 		Number:    number,
 		Status:    domain.StatusNew,
-		UserId:    userId,
+		UserID:    userId,
 		CreatedAt: time.Now(),
 	}
 
@@ -93,12 +93,12 @@ func (s *Service) CreateOrder(ctx context.Context, number string, userId domain.
 		return nil, err
 	}
 
-	order.Id = id
+	order.ID = id
 
 	return order, nil
 }
 
-func (s *Service) UserOrders(ctx context.Context, userId domain.UserId) ([]domain.OrderWithBalance, error) {
+func (s *Service) UserOrders(ctx context.Context, userId domain.UserID) ([]domain.OrderWithBalance, error) {
 	orders, err := s.rep.LoadOrdersWithBalance(ctx, userId)
 	if err != nil {
 		return nil, err
@@ -185,6 +185,12 @@ func (s *Service) processAccrual(o domain.Order) error {
 		return err
 	}
 
+	s.log.Info(
+		"accrualResponse",
+		zap.String("status", res.Status),
+		zap.Float64("sum", res.Sum),
+	)
+
 	if res.Status == "INVALID" {
 		o.Status = domain.StatusInvalid
 		if err = s.rep.Update(o); err != nil {
@@ -200,7 +206,7 @@ func (s *Service) processAccrual(o domain.Order) error {
 
 	err = s.balanceRep.AddBalance(&domain.Balance{
 		OrderNumber: o.Number,
-		UserId:      o.UserId,
+		UserID:      o.UserID,
 		Sum:         res.Sum,
 		Type:        domain.BalanceTypeAdd,
 		CreatedAt:   time.Now(),

@@ -6,9 +6,9 @@ import (
 )
 
 type repository interface {
-	GetUserWithdrawals(ctx context.Context, userId domain.UserId) ([]*domain.Balance, error)
-	GetUserSum(ctx context.Context, userId domain.UserId, types ...domain.BalanceType) ([]*domain.SumBalance, error)
-	Withdraw(ctx context.Context, userId domain.UserId, number string, sum float64) (*domain.Balance, error)
+	GetUserWithdrawals(ctx context.Context, userId domain.UserID) ([]*domain.Balance, error)
+	GetUserSum(ctx context.Context, userId domain.UserID, types ...domain.BalanceType) ([]*domain.SumBalance, error)
+	Withdraw(ctx context.Context, userId domain.UserID, number string, sum float64) (*domain.Balance, error)
 }
 
 type Service struct {
@@ -23,7 +23,7 @@ func NewBalanceService(rep repository, nv domain.OrderNumberValidate) *Service {
 	}
 }
 
-func (s *Service) UserWithdrawals(ctx context.Context, userId domain.UserId) ([]*domain.Balance, error) {
+func (s *Service) UserWithdrawals(ctx context.Context, userId domain.UserID) ([]*domain.Balance, error) {
 	withdrawals, err := s.rep.GetUserWithdrawals(ctx, userId)
 	if err != nil {
 		return nil, err
@@ -32,7 +32,7 @@ func (s *Service) UserWithdrawals(ctx context.Context, userId domain.UserId) ([]
 	return withdrawals, nil
 }
 
-func (s *Service) GetUserSumWC(ctx context.Context, userId domain.UserId) (*domain.SumWC, error) {
+func (s *Service) GetUserSumWC(ctx context.Context, userId domain.UserID) (*domain.SumWC, error) {
 	sums, err := s.rep.GetUserSum(ctx, userId, domain.BalanceTypeAdd, domain.BalanceTypeWithdrawn)
 	if err != nil {
 		return nil, err
@@ -51,7 +51,7 @@ func (s *Service) GetUserSumWC(ctx context.Context, userId domain.UserId) (*doma
 	return sumWC, nil
 }
 
-func (s *Service) Withdraw(ctx context.Context, userId domain.UserId, number string, sum float64) (*domain.Balance, error) {
+func (s *Service) Withdraw(ctx context.Context, userId domain.UserID, number string, sum float64) (*domain.Balance, error) {
 	if err := s.nv.Validate(number); err != nil {
 		return nil, err
 	}

@@ -19,10 +19,10 @@ var (
 )
 
 type Order struct {
-	Id        int64
+	ID        int64
 	Number    string
 	Status    Status
-	UserId    UserId
+	UserID    UserID
 	CreatedAt time.Time
 }
 

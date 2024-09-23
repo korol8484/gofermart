@@ -21,7 +21,7 @@ func (r *Repository) LoadOrder(ctx context.Context, number string) (*domain.Orde
 		ctx,
 		`SELECT o.id, o.number, o.status, o.user_id, o.created_at FROM orders o WHERE o.number = $1;`,
 		number,
-	).Scan(&o.Id, &o.Number, &o.Status, &o.UserId, &o.CreatedAt)
+	).Scan(&o.ID, &o.Number, &o.Status, &o.UserID, &o.CreatedAt)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, domain.ErrNotFoundOrder
@@ -38,7 +38,7 @@ func (r *Repository) CreateOrder(ctx context.Context, order *domain.Order) (int6
 	err := r.db.QueryRowContext(
 		ctx,
 		`INSERT INTO orders (number, status, user_id, created_at) VALUES ($1, $2, $3, $4) RETURNING id;`,
-		order.Number, order.Status, order.UserId, order.CreatedAt,
+		order.Number, order.Status, order.UserID, order.CreatedAt,
 	).Scan(&id)
 	if err != nil {
 		return 0, err
@@ -47,7 +47,7 @@ func (r *Repository) CreateOrder(ctx context.Context, order *domain.Order) (int6
 	return id, nil
 }
 
-func (r *Repository) LoadOrdersWithBalance(ctx context.Context, userId domain.UserId) ([]domain.OrderWithBalance, error) {
+func (r *Repository) LoadOrdersWithBalance(ctx context.Context, userId domain.UserID) ([]domain.OrderWithBalance, error) {
 	rows, err := r.db.QueryContext(
 		ctx,
 		`SELECT o.id, o.number, o.status, o.user_id, o.created_at, b.sum FROM orders o LEFT JOIN balance b on o.number = b.order_number AND b.type = $1 WHERE o.user_id = $2 ORDER BY o.created_at DESC;`,
@@ -68,7 +68,7 @@ func (r *Repository) LoadOrdersWithBalance(ctx context.Context, userId domain.Us
 			Order: domain.Order{},
 		}
 
-		err = rows.Scan(&o.Id, &o.Number, &o.Status, &o.UserId, &o.CreatedAt, &balance)
+		err = rows.Scan(&o.ID, &o.Number, &o.Status, &o.UserID, &o.CreatedAt, &balance)
 		if err != nil {
 			return nil, err
 		}
@@ -101,7 +101,7 @@ func (r *Repository) LoadOrdersToProcess(ctx context.Context) ([]domain.Order, e
 	for rows.Next() {
 		o := domain.Order{}
 
-		err = rows.Scan(&o.Id, &o.Number, &o.Status, &o.UserId, &o.CreatedAt)
+		err = rows.Scan(&o.ID, &o.Number, &o.Status, &o.UserID, &o.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -113,7 +113,7 @@ func (r *Repository) LoadOrdersToProcess(ctx context.Context) ([]domain.Order, e
 }
 
 func (r *Repository) Update(o domain.Order) error {
-	_, err := r.db.Exec(`UPDATE orders SET status = $1 WHERE id = $2;`, o.Status, o.Id)
+	_, err := r.db.Exec(`UPDATE orders SET status = $1 WHERE id = $2;`, o.Status, o.ID)
 	if err != nil {
 		return err
 	}

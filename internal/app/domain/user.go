@@ -6,10 +6,10 @@ var (
 	ErrIssetUser = errors.New("логин уже занят")
 )
 
-type UserId int64
+type UserID int64
 
 type User struct {
-	ID           UserId
+	ID           UserID
 	Login        string
 	PasswordHash string
 }

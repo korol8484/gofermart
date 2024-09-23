@@ -30,7 +30,7 @@ func NewJwtService(secret, tokenName string, expire time.Duration) *Service {
 	}
 }
 
-func (s *Service) LoadUserID(r *http.Request) (domain.UserId, error) {
+func (s *Service) LoadUserID(r *http.Request) (domain.UserID, error) {
 	cToken, err := r.Cookie(s.tokenName)
 	if err != nil {
 		return 0, errors.New("user session not' start")
@@ -41,13 +41,13 @@ func (s *Service) LoadUserID(r *http.Request) (domain.UserId, error) {
 		return 0, errors.New("token not valid")
 	}
 
-	return domain.UserId(claim.UserID), nil
+	return domain.UserID(claim.UserID), nil
 }
 
 // CreateSession - По хорошему надо создать структуру сессии и возвращать ее,
 // для структуры методы save, read через интефрейс репозитория и там уже Cookie итд
 // тут упрощенно
-func (s *Service) CreateSession(w http.ResponseWriter, r *http.Request, id domain.UserId) error {
+func (s *Service) CreateSession(w http.ResponseWriter, r *http.Request, id domain.UserID) error {
 	token, err := s.buildJWTString(id)
 	if err != nil {
 		return err
@@ -64,7 +64,7 @@ func (s *Service) CreateSession(w http.ResponseWriter, r *http.Request, id domai
 	return nil
 }
 
-func (s *Service) buildJWTString(id domain.UserId) (string, error) {
+func (s *Service) buildJWTString(id domain.UserID) (string, error) {
 	token := jwt.NewWithClaims(s.signMethod, claims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(s.expire)),

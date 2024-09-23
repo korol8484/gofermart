@@ -29,9 +29,9 @@ type withdrawRequest struct {
 }
 
 type usecase interface {
-	UserWithdrawals(ctx context.Context, userId domain.UserId) ([]*domain.Balance, error)
-	GetUserSumWC(ctx context.Context, userId domain.UserId) (*domain.SumWC, error)
-	Withdraw(ctx context.Context, userId domain.UserId, number string, sum float64) (*domain.Balance, error)
+	UserWithdrawals(ctx context.Context, userId domain.UserID) ([]*domain.Balance, error)
+	GetUserSumWC(ctx context.Context, userId domain.UserID) (*domain.SumWC, error)
+	Withdraw(ctx context.Context, userId domain.UserID, number string, sum float64) (*domain.Balance, error)
 }
 
 type Handler struct {
