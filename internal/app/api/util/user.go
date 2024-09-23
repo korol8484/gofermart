@@ -31,7 +31,7 @@ func CheckAuth(loader AuthSession) func(h http.Handler) http.Handler {
 	}
 }
 
-func UserIdFromContext(ctx context.Context) (domain.UserID, bool) {
+func UserIDFromContext(ctx context.Context) (domain.UserID, bool) {
 	userID, ok := ctx.Value(ctxUserKey).(domain.UserID)
 
 	return userID, ok

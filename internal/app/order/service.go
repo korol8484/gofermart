@@ -70,7 +70,7 @@ func NewOrderService(
 		log:        log,
 	}
 
-	s.accrual(2 * time.Second)
+	s.accrual(1 * time.Second)
 
 	return s
 }

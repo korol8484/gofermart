@@ -34,7 +34,7 @@ func NewOrderHandler(rep orderRep) *Handler {
 }
 
 func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
-	userID, ok := util.UserIdFromContext(r.Context())
+	userID, ok := util.UserIDFromContext(r.Context())
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
@@ -67,7 +67,7 @@ func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) listOrders(w http.ResponseWriter, r *http.Request) {
-	userID, ok := util.UserIdFromContext(r.Context())
+	userID, ok := util.UserIDFromContext(r.Context())
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		return

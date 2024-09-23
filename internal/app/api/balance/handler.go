@@ -43,7 +43,7 @@ func NewBalanceHandler(uc usecase) *Handler {
 }
 
 func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
-	userID, ok := util.UserIdFromContext(r.Context())
+	userID, ok := util.UserIDFromContext(r.Context())
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
@@ -81,7 +81,7 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) balance(w http.ResponseWriter, r *http.Request) {
-	userID, ok := util.UserIdFromContext(r.Context())
+	userID, ok := util.UserIDFromContext(r.Context())
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
@@ -110,7 +110,7 @@ func (h *Handler) balance(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) withdraw(w http.ResponseWriter, r *http.Request) {
-	userID, ok := util.UserIdFromContext(r.Context())
+	userID, ok := util.UserIDFromContext(r.Context())
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		return

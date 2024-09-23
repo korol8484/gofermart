@@ -26,9 +26,12 @@ func (r *Repository) GetUserWithdrawals(ctx context.Context, userID domain.UserI
 		userID,
 		domain.BalanceTypeWithdrawn,
 	)
-
 	if err != nil {
 		return nil, err
+	}
+
+	if rows.Err() != nil {
+		return nil, rows.Err()
 	}
 
 	defer rows.Close()
@@ -133,6 +136,10 @@ func (r *Repository) GetUserSum(ctx context.Context, userID domain.UserID, types
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	if rows.Err() != nil {
+		return nil, rows.Err()
 	}
 
 	defer rows.Close()
