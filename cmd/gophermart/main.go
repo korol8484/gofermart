@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"github.com/caarlos0/env/v11"
+	"github.com/korol8484/gofermart/internal/app/accrual"
 	hBalance "github.com/korol8484/gofermart/internal/app/api/balance"
 	"github.com/korol8484/gofermart/internal/app/api/order"
 	"github.com/korol8484/gofermart/internal/app/api/user"
@@ -86,17 +87,24 @@ func run(cfg *config.App, log *zap.Logger) error {
 	authSvc := auth.NewService(userRepo)
 	authHandler := user.NewAuthHandler(authSvc, session)
 
-	// Orders
 	nv := dorder.NewNumberValidate()
-
-	orderRep := dorder.NewOrderRepository(pg)
-	orderSvc := dorder.NewOrderService(orderRep, dorder.NewValidator(orderRep, nv))
-	oHandler := order.NewOrderHandler(orderSvc)
 
 	// balance
 	balanceRep := balance.NewBalanceRepository(pg)
 	balanceSvc := balance.NewBalanceService(balanceRep, nv)
 	bHandler := hBalance.NewBalanceHandler(balanceSvc)
+
+	// Orders
+
+	orderRep := dorder.NewOrderRepository(pg)
+	orderSvc := dorder.NewOrderService(
+		orderRep,
+		dorder.NewValidator(orderRep, nv),
+		accrual.NewRepository(&accrual.Config{URL: cfg.AccrualListen}),
+		balanceRep,
+		log,
+	)
+	oHandler := order.NewOrderHandler(orderSvc)
 
 	httpServer := server.NewApp(&server.Config{
 		Listen:         cfg.Listen,

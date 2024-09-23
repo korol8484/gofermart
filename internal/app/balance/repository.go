@@ -98,6 +98,18 @@ func (r *Repository) Withdraw(ctx context.Context, userId domain.UserId, number 
 	}, nil
 }
 
+func (r *Repository) AddBalance(o *domain.Balance) error {
+	_, err := r.db.Exec(
+		`INSERT INTO balance (order_number, sum, type, user_id, created_at) VALUES ($1, $2, $3, $4, $5);`,
+		o.OrderNumber, o.Sum, o.Type, o.UserId, o.CreatedAt,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (r *Repository) GetUserSum(ctx context.Context, userId domain.UserId, types ...domain.BalanceType) ([]*domain.SumBalance, error) {
 	var (
 		placeholders []string

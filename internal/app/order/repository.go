@@ -82,3 +82,41 @@ func (r *Repository) LoadOrdersWithBalance(ctx context.Context, userId domain.Us
 
 	return orders, nil
 }
+
+func (r *Repository) LoadOrdersToProcess(ctx context.Context) ([]domain.Order, error) {
+	q := `UPDATE orders o SET status = $1
+	WHERE o.id IN (
+			SELECT id FROM orders
+			WHERE status = $2 ORDER BY id LIMIT 10
+		) AND status = $2
+	returning o.id, o.number, o.status, o.user_id, o.created_at;`
+
+	rows, err := r.db.QueryContext(ctx, q, domain.StatusProcessing, domain.StatusNew)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+	var orders []domain.Order
+	for rows.Next() {
+		o := domain.Order{}
+
+		err = rows.Scan(&o.Id, &o.Number, &o.Status, &o.UserId, &o.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+
+		orders = append(orders, o)
+	}
+
+	return orders, nil
+}
+
+func (r *Repository) Update(o domain.Order) error {
+	_, err := r.db.Exec(`UPDATE orders SET status = $1 WHERE id = $2;`, o.Status, o.Id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
