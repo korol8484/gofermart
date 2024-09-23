@@ -48,6 +48,10 @@ func (s *Service) GetUserSumWC(ctx context.Context, userID domain.UserID) (*doma
 		}
 	}
 
+	if sumWC.Current > 0 {
+		sumWC.Current = sumWC.Current - sumWC.Withdrawn
+	}
+
 	return sumWC, nil
 }
 
