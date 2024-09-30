@@ -28,7 +28,19 @@ type AccrualResponse struct {
 	Sum    float64
 }
 
-type AccrualRepository interface {
+type ErrAccrualRetry struct {
+	retry int64
+}
+
+func (a *ErrAccrualRetry) Error() string {
+	return "Too Many Requests"
+}
+
+func (a *ErrAccrualRetry) WithRetryTime(retry int64) {
+	a.retry = retry
+}
+
+type AccrualClient interface {
 	Process(o domain.Order) (*AccrualResponse, error)
 }
 
@@ -44,12 +56,14 @@ type ordersRepository interface {
 }
 
 type Service struct {
-	rep        ordersRepository
-	validator  validateOrder
-	accrualRep AccrualRepository
-	balanceRep BalanceRepository
-	log        *zap.Logger
+	rep          ordersRepository
+	validator    validateOrder
+	accrualRep   AccrualClient
+	balanceRep   BalanceRepository
+	log          *zap.Logger
+	retryAccrual map[string]time.Time
 
+	mu        sync.RWMutex
 	wg        sync.WaitGroup
 	closeChan chan struct{}
 }
@@ -57,7 +71,7 @@ type Service struct {
 func NewOrderService(
 	rep ordersRepository,
 	validator validateOrder,
-	accrualRep AccrualRepository,
+	accrualRep AccrualClient,
 	balanceRep BalanceRepository,
 	log *zap.Logger,
 ) *Service {
@@ -180,8 +194,18 @@ func (s *Service) processAccrual(o domain.Order) error {
 		}
 	}()
 
+	if err = s.canProcessAccrual(&o); err != nil {
+		return err
+	}
+
 	res, err := s.accrualRep.Process(o)
-	if err != nil {
+	if err != nil && !errors.Is(err, &ErrAccrualRetry{}) {
+		return err
+	} else if err != nil && errors.Is(err, &ErrAccrualRetry{}) {
+		s.mu.Lock()
+		s.retryAccrual[o.Number] = time.Now().Add(time.Duration(err.(*ErrAccrualRetry).retry) * time.Second)
+		s.mu.Unlock()
+
 		return err
 	}
 
@@ -219,6 +243,23 @@ func (s *Service) processAccrual(o domain.Order) error {
 	err = s.rep.Update(o)
 
 	return err
+}
+
+// простой вариант проверки, в реальном сервисе будет оверхед на запросах и проверках,
+// такое лучше отправить в отдельную обработку (таску), как вариант добавив в БД поле когда следует запустить
+func (s *Service) canProcessAccrual(o *domain.Order) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if t, ok := s.retryAccrual[o.Number]; ok {
+		if time.Now().Before(t) {
+			return errors.New("request time has not yet come")
+		}
+
+		delete(s.retryAccrual, o.Number)
+	}
+
+	return nil
 }
 
 func (s *Service) Close() {

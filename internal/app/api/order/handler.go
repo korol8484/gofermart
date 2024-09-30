@@ -36,7 +36,7 @@ func NewOrderHandler(rep orderRep) *Handler {
 func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 	userID, ok := util.UserIDFromContext(r.Context())
 	if !ok {
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -69,7 +69,7 @@ func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) listOrders(w http.ResponseWriter, r *http.Request) {
 	userID, ok := util.UserIDFromContext(r.Context())
 	if !ok {
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -107,7 +107,9 @@ func (h *Handler) listOrders(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) RegisterRoutes(loader util.AuthSession) func(mux *chi.Mux) {
 	return func(mux *chi.Mux) {
-		mux.With(util.CheckAuth(loader)).Post("/api/user/orders", h.createOrder)
-		mux.With(util.CheckAuth(loader)).Get("/api/user/orders", h.listOrders)
+		routes := mux.With(util.CheckAuth(loader))
+
+		routes.Post("/api/user/orders", h.createOrder)
+		routes.Get("/api/user/orders", h.listOrders)
 	}
 }

@@ -23,7 +23,7 @@ func NewBalanceService(rep repository, nv domain.OrderNumberValidate) *Service {
 	}
 }
 
-func (s *Service) UserWithdrawals(ctx context.Context, userID domain.UserID) ([]*domain.Balance, error) {
+func (s *Service) LoadWithdrawals(ctx context.Context, userID domain.UserID) ([]*domain.Balance, error) {
 	withdrawals, err := s.rep.GetUserWithdrawals(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -32,13 +32,13 @@ func (s *Service) UserWithdrawals(ctx context.Context, userID domain.UserID) ([]
 	return withdrawals, nil
 }
 
-func (s *Service) GetUserSumWC(ctx context.Context, userID domain.UserID) (*domain.SumWC, error) {
+func (s *Service) LoadSum(ctx context.Context, userID domain.UserID) (*domain.Sum, error) {
 	sums, err := s.rep.GetUserSum(ctx, userID, domain.BalanceTypeAdd, domain.BalanceTypeWithdrawn)
 	if err != nil {
 		return nil, err
 	}
 
-	sumWC := &domain.SumWC{}
+	sumWC := &domain.Sum{}
 	for _, wc := range sums {
 		switch wc.Type {
 		case domain.BalanceTypeAdd:

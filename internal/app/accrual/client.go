@@ -7,6 +7,7 @@ import (
 	"github.com/korol8484/gofermart/internal/app/domain"
 	"github.com/korol8484/gofermart/internal/app/order"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -16,18 +17,18 @@ type response struct {
 	Accrual float64 `json:"accrual,omitempty"`
 }
 
-type Repository struct {
+type Client struct {
 	client *http.Client
 	host   string
 }
 
-func NewRepository(cfg *Config) *Repository {
+func NewClient(cfg *Config) *Client {
 	def := http.DefaultTransport
 	def.(*http.Transport).TLSClientConfig = &tls.Config{
 		InsecureSkipVerify: true,
 	}
 
-	return &Repository{
+	return &Client{
 		client: &http.Client{
 			Transport: def,
 			Timeout:   5 * time.Second,
@@ -36,7 +37,7 @@ func NewRepository(cfg *Config) *Repository {
 	}
 }
 
-func (r *Repository) Process(o domain.Order) (*order.AccrualResponse, error) {
+func (r *Client) Process(o domain.Order) (*order.AccrualResponse, error) {
 	url := fmt.Sprintf("%s/api/orders/%s", r.host, o.Number)
 
 	resp, err := r.client.Get(url)
@@ -44,6 +45,17 @@ func (r *Repository) Process(o domain.Order) (*order.AccrualResponse, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusTooManyRequests {
+		errResp := &order.ErrAccrualRetry{}
+		if s, ok := resp.Header["Retry-After"]; ok {
+			if sleep, err := strconv.ParseInt(s[0], 10, 32); err == nil {
+				errResp.WithRetryTime(sleep)
+			}
+		}
+
+		return nil, errResp
+	}
 
 	var ar response
 	if err = json.NewDecoder(resp.Body).Decode(&ar); err != nil {
