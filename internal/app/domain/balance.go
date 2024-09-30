@@ -37,7 +37,7 @@ type Sum struct {
 }
 
 func ConvertFromCurrencyUnit(s int64) float64 {
-	return float64(s / 100)
+	return float64(s) / 100
 }
 
 func ConvertToCurrencyUnit(s float64) int64 {
