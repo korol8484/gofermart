@@ -63,12 +63,12 @@ func (r *Repository) Withdraw(ctx context.Context, userID domain.UserID, number 
 		}
 	}()
 
-	var currentBalance int64
+	var currentBalance sql.NullInt64
 	err = tx.QueryRowContext(
 		ctx,
 		`SELECT sum(b.sum) - (
 			SELECT sum(b2.sum) FROM balance b2 WHERE b2.user_id = $1 and b2.type = $3
-			) FROM balance b
+			) as sum FROM balance b
 		WHERE b.user_id = $1 and b.type = $2;`,
 		userID, domain.BalanceTypeAdd, domain.BalanceTypeWithdrawn,
 	).Scan(&currentBalance)
@@ -76,7 +76,7 @@ func (r *Repository) Withdraw(ctx context.Context, userID domain.UserID, number 
 		return nil, err
 	}
 
-	if (currentBalance - domain.ConvertToCurrencyUnit(sum)) < 0 {
+	if currentBalance.Valid && (currentBalance.Int64-domain.ConvertToCurrencyUnit(sum)) < 0 {
 		return nil, domain.ErrBalanceInsufficientFunds
 	}
 
