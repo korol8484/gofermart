@@ -31,7 +31,15 @@ type SumBalance struct {
 	Sum    float64
 }
 
-type SumWC struct {
+type Sum struct {
 	Current   float64
 	Withdrawn float64
+}
+
+func ConvertFromCurrencyUnit(s int64) float64 {
+	return float64(s / 100)
+}
+
+func ConvertToCurrencyUnit(s float64) int64 {
+	return int64(s * 100)
 }

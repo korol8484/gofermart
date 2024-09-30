@@ -66,7 +66,7 @@ func (r *Repository) LoadOrdersWithBalance(ctx context.Context, userID domain.Us
 
 	var orders []domain.OrderWithBalance
 	for rows.Next() {
-		var balance sql.NullFloat64
+		var balance sql.NullInt64
 
 		o := domain.OrderWithBalance{
 			Order: domain.Order{},
@@ -78,7 +78,7 @@ func (r *Repository) LoadOrdersWithBalance(ctx context.Context, userID domain.Us
 		}
 
 		if balance.Valid {
-			o.Balance = balance.Float64
+			o.Balance = domain.ConvertFromCurrencyUnit(balance.Int64)
 		}
 
 		orders = append(orders, o)

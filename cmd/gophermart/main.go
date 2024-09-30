@@ -100,7 +100,7 @@ func run(cfg *config.App, log *zap.Logger) error {
 	orderSvc := dorder.NewOrderService(
 		orderRep,
 		dorder.NewValidator(orderRep, nv),
-		accrual.NewRepository(&accrual.Config{URL: cfg.AccrualListen}),
+		accrual.NewClient(&accrual.Config{URL: cfg.AccrualListen}),
 		balanceRep,
 		log,
 	)

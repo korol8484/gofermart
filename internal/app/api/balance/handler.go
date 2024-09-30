@@ -30,8 +30,8 @@ type withdrawRequest struct {
 }
 
 type usecase interface {
-	UserWithdrawals(ctx context.Context, userID domain.UserID) ([]*domain.Balance, error)
-	GetUserSumWC(ctx context.Context, userID domain.UserID) (*domain.SumWC, error)
+	LoadWithdrawals(ctx context.Context, userID domain.UserID) ([]*domain.Balance, error)
+	LoadSum(ctx context.Context, userID domain.UserID) (*domain.Sum, error)
 	Withdraw(ctx context.Context, userID domain.UserID, number string, sum float64) (*domain.Balance, error)
 }
 
@@ -47,11 +47,11 @@ func NewBalanceHandler(uc usecase, log *zap.Logger) *Handler {
 func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
 	userID, ok := util.UserIDFromContext(r.Context())
 	if !ok {
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	withdrawals, err := h.uc.UserWithdrawals(r.Context(), userID)
+	withdrawals, err := h.uc.LoadWithdrawals(r.Context(), userID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -85,11 +85,11 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) balance(w http.ResponseWriter, r *http.Request) {
 	userID, ok := util.UserIDFromContext(r.Context())
 	if !ok {
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	sumWC, err := h.uc.GetUserSumWC(r.Context(), userID)
+	sumWC, err := h.uc.LoadSum(r.Context(), userID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -119,7 +119,7 @@ func (h *Handler) balance(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) withdraw(w http.ResponseWriter, r *http.Request) {
 	userID, ok := util.UserIDFromContext(r.Context())
 	if !ok {
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -161,8 +161,10 @@ func (h *Handler) withdraw(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) RegisterRoutes(loader util.AuthSession) func(mux *chi.Mux) {
 	return func(mux *chi.Mux) {
-		mux.With(util.CheckAuth(loader)).Get("/api/user/withdrawals", h.list)
-		mux.With(util.CheckAuth(loader)).Get("/api/user/balance", h.balance)
-		mux.With(util.CheckAuth(loader)).Post("/api/user/balance/withdraw", h.withdraw)
+		routes := mux.With(util.CheckAuth(loader))
+
+		routes.Get("/api/user/withdrawals", h.list)
+		routes.Get("/api/user/balance", h.balance)
+		routes.Post("/api/user/balance/withdraw", h.withdraw)
 	}
 }
